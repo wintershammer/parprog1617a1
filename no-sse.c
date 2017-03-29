@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <time.h>
 #include <emmintrin.h>
+#include <time.h>
 
-#define N 401
-#define M 323
+#define N 4
+#define M 3
 
 void getWallTime(double *wct){
 	struct timeval tp;//domh tou system
@@ -31,7 +31,6 @@ int main(){
 		free(a);
 		exit(1);
 	}
-
     srand(time(NULL));
 
 	int counter = 0;
@@ -39,25 +38,35 @@ int main(){
 		a[i] = rand();
 		b[i] = 0;
 	}
-
 	getWallTime(&timeStart);
 	for(i=0;i<M;i++){
 		if(i > 0 && i < M-1){
 			for(j=1;j<N-1;j++){
-				b[i*N+j] += (a[(i-1)*N+(j-1)] * 0.5) + (a[(i-1)*N+j] * 0.5) + (a[(i-1)*N+(j+1)] * 0.5);
-				b[i*N+j] += (a[i*N+(j-1)] * 0.5) + (a[i*N+j] * 5) + (a[i*N+(j+1)] * 0.5);
-				b[i*N+j] += (a[(i+1)*N+(j-1)] * 0.5) + (a[(i+1)*N+j] * 0.5) + (a[(i+1)*N+j+1] * 0.5);
+				int k = 0;
+				int l = 0;
+				for(k=0;k<3;k++){
+					for(l=0;l<3;l++){
+						int firstIndex = (k % 3) ;
+						int secondIndex = (l % 3) ;
+						
+						if(firstIndex == 0 && secondIndex == 0){
+							
+							b[i*N+j] += a[(firstIndex * N) + (secondIndex)] * 5;
+						}
+						else{
+							b[i*N+j] += a[(firstIndex * N) + (secondIndex)] * 0.5;
+						}
+					}
+
+				}
 			}	
 		}
 	}
 	getWallTime(&timeEnd);
-
 	printf("\nDONE!\n");
+
 	double mflops;
 	mflops = ((timeEnd-timeStart)*1e6);
 	printf("Done for dims %d * %d in %lf \n",N,M,mflops);
-	free(a);
-	free(b);
-
 	return 0;
 }
