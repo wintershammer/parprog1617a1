@@ -4,8 +4,8 @@
 #include <emmintrin.h>
 #include <time.h>
 
-#define N 401
-#define M 323
+#define N 4
+#define M 3
 
 void getWallTime(double *wct){
 	struct timeval tp;//domh tou system
@@ -16,9 +16,6 @@ void getWallTime(double *wct){
 int main(){
 	
 	float *a, *b, *sumA, *sumB;
-	float c[] __attribute__ ((aligned (16))) = {0.5,0.5,0.5,0.5};
-	 __m128 *vc = (__m128*)c;  
-
 	double timeStart, timeEnd;
 
 	__m128 *va,*vb,*vSumA,*vSumB;
@@ -61,6 +58,11 @@ int main(){
 		sumA[i] = 0;
 		sumB[i] = 0;
 	}
+
+	const __m128 scalar = _mm_set1_ps(0.5);
+
+	vSumA=(__m128 *)sumA;
+	vSumB=(__m128 *)sumB;
 	getWallTime(&timeStart);
 	for(i=0;i<M;i++){
 		va=(__m128 *)a;
@@ -77,28 +79,20 @@ int main(){
 				sumB[1] = a[(i+1)*N+(j-1)];
 				sumB[2] = a[(i+1)*N+(j)];
 				sumB[3] = a[(i+1)*N+(j+1)];
+				*vSumA = _mm_add_ps(_mm_mul_ps(*vSumA,scalar),  _mm_mul_ps(*vSumB,scalar)) ;
+				const __m128 t = _mm_add_ps(*vSumA, _mm_movehl_ps(*vSumA, *vSumA));
+				const __m128 sum = _mm_add_ss(t, _mm_shuffle_ps(t, t, 1));
+				b[i*N+j] = sum[0] + a[(i)*N+(j)] * 5;
 
-				vSumA=(__m128 *)sumA;
-				vSumB=(__m128 *)sumB;
-				*vSumA = _mm_mul_ps(*vSumA,*vc);
-				*vSumB = _mm_mul_ps(*vSumB,*vc);
-
-				float souma = 0;
-				for(k=0;k<4;k++){
-					souma += sumA[k];
-				}
-				for(k=0;k<4;k++){
-					souma += sumB[k];
-				}
-				souma += a[i*N+(j)] * 5;
-				b[i*N+j] += souma;
 			}	
 		}
 	}
 	getWallTime(&timeEnd);
 	printf("\nDONE!\n");
+
+
 	double mflops;
-	mflops = ((timeEnd-timeStart));
+	mflops = ((timeEnd-timeStart)*1e6);
 	printf("Done for dims %d * %d in %lf \n",N,M,mflops);
 	free(a);
 	free(b);
