@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <time.h>
 #include <emmintrin.h>
 
-#define N 40
-#define M 30
+#define N 401
+#define M 323
 
 void getWallTime(double *wct){
 	struct timeval tp;//domh tou system
@@ -31,11 +32,14 @@ int main(){
 		exit(1);
 	}
 
+    srand(time(NULL));
+
 	int counter = 0;
 	for(i=0;i<N*M;i++){
-		a[i] = i+1;
+		a[i] = rand();
 		b[i] = 0;
 	}
+
 	getWallTime(&timeStart);
 	for(i=0;i<M;i++){
 		if(i > 0 && i < M-1){
@@ -47,18 +51,13 @@ int main(){
 		}
 	}
 	getWallTime(&timeEnd);
-	/*printf("\nDONE!\n");
-	for(i=0;i<M;i++){
-		for(j=0;j<N;j++){
-			printf("%f ",b[i*N+j]);
-		}
-		printf("\n");
 
-	}*/
-
-
+	printf("\nDONE!\n");
 	double mflops;
 	mflops = ((timeEnd-timeStart)*1e6);
-	printf("Done in %lf \n",mflops);
+	printf("Done for dims %d * %d in %lf \n",N,M,mflops);
+	free(a);
+	free(b);
+
 	return 0;
 }
